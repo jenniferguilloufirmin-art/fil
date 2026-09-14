@@ -33,13 +33,13 @@ Pour afficher l'écran d'un appareil dans une fenêtre du Mac :
 
 ```sh
 aibi mirror samsung   # nécessite scrcpy et une autorisation ADB préalable
-aibi mirror ipad      # ouvre QuickTime pour une connexion USB
-aibi mirror iphone    # ouvre QuickTime pour une connexion USB
+aibi mirror ipad      # ouvre directement une fenêtre QuickTime
+aibi mirror iphone    # ouvre directement une fenêtre QuickTime
 ```
 
 Pour Samsung, installez scrcpy avec `brew install scrcpy`. Pour iPad et
-iPhone, macOS impose encore de choisir l'appareil dans QuickTime ; aucune
-commande native ne permet de contourner cette autorisation.
+iPhone, la commande ouvre directement une nouvelle fenêtre QuickTime. Branchez
+l'appareil en USB, puis choisissez-le dans le menu caméra de cette fenêtre.
 
 Si `./aibi` renvoie `permission denied`, exécutez d'abord `chmod 755 ./aibi`
 et utilisez `bash ./aibi ...`. Vérifiez aussi que `aibi` est bien le fichier

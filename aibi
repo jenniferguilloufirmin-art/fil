@@ -54,9 +54,13 @@ mirror_device() {
       if [[ "$(uname -s)" != "Darwin" ]]; then
         die "iPad and iPhone mirroring is supported here only on macOS"
       fi
-      open -a "QuickTime Player"
-      printf '%s\n' "QuickTime est ouvert. Choisissez Fichier > Nouvel enregistrement vidéo, puis l’appareil dans le menu caméra."
-      printf '%s\n' "macOS ne fournit pas de commande native pour sélectionner automatiquement un iPad ou un iPhone."
+      osascript <<'APPLESCRIPT'
+tell application "QuickTime Player"
+  activate
+  new movie recording
+end tell
+APPLESCRIPT
+      printf '%s\n' "Fenêtre QuickTime ouverte. Sélectionnez l’iPad ou l’iPhone dans le menu caméra de cette fenêtre."
       ;;
     *)
       die "device must be ipad, iphone, or samsung"
