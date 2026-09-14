@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+VERSION="1.0.0"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  aibi wireless [apple|samsung|other]
+  aibi wired    [apple|samsung|other]
+  aibi status
+  aibi --help
+
+Open the native display settings for connecting another screen.
+The device name selects the instructions shown after the settings open.
+EOF
+}
+
+die() {
+  printf 'aibi: %s\n' "$1" >&2
+  exit 2
+}
+
+open_macos_displays() {
+  if ! command -v open >/dev/null 2>&1; then
+    die "the macOS 'open' command is unavailable"
+  fi
+  open "x-apple.systempreferences:com.apple.Displays-Settings.extension"
+}
+
+open_linux_displays() {
+  if command -v gnome-control-center >/dev/null 2>&1; then
+    gnome-control-center display >/dev/null 2>&1 &
+  elif command -v xfce4-display-settings >/dev/null 2>&1; then
+    xfce4-display-settings >/dev/null 2>&1 &
+  elif command -v arandr >/dev/null 2>&1; then
+    arandr >/dev/null 2>&1 &
+  else
+    die "no supported display settings tool found (GNOME, XFCE, or ARandR)"
+  fi
+}
+
+show_next_steps() {
+  local mode="$1"
+  local device="$2"
+
+  printf '\nMode: %s | Appareil: %s\n' "$mode" "$device"
+  case "$device" in
+    apple)
+      if [[ "$mode" == "wireless" ]]; then
+        printf '%s\n' "Dans Réglages Écrans, choisissez Recopie d’écran/AirPlay puis l’Apple TV ou le Mac."
+      else
+        printf '%s\n' "Branchez le câble compatible, puis sélectionnez l’écran dans Réglages Écrans."
+      fi
+      ;;
+    samsung)
+      if [[ "$mode" == "wireless" ]]; then
+        printf '%s\n' "Activez Smart View/Screen Mirroring sur le Samsung et sélectionnez cet ordinateur si disponible."
+      else
+        printf '%s\n' "Branchez le câble USB-C/HDMI compatible, puis sélectionnez l’écran dans les réglages."
+      fi
+      ;;
+    other)
+      if [[ "$mode" == "wireless" ]]; then
+        printf '%s\n' "Activez Miracast, Chromecast ou la recopie d’écran sur l’appareil, puis choisissez-le dans les réglages."
+      else
+        printf '%s\n' "Branchez le câble vidéo compatible, puis sélectionnez l’écran dans les réglages."
+      fi
+      ;;
+  esac
+  printf '%s\n' "Remarque : la diffusion sans fil dépend du protocole et du matériel pris en charge par l’ordinateur."
+}
+
+main() {
+  local action="${1:-}"
+  local device="${2:-other}"
+
+  case "$action" in
+    --help|-h)
+      usage
+      ;;
+    --version|-v)
+      printf '%s\n' "$VERSION"
+      ;;
+    status)
+      printf 'aibi %s\n' "$VERSION"
+      printf 'OS: %s\n' "$(uname -s)"
+      if command -v system_profiler >/dev/null 2>&1; then
+        printf 'Display hardware: available through system_profiler\n'
+      elif command -v xrandr >/dev/null 2>&1; then
+        printf 'Display hardware: available through xrandr\n'
+      else
+        printf 'Display hardware: native inspection tool not found\n'
+      fi
+      ;;
+    wireless|wired)
+      [[ "$device" == "apple" || "$device" == "samsung" || "$device" == "other" ]] ||
+        die "device must be apple, samsung, or other"
+      case "$(uname -s)" in
+        Darwin) open_macos_displays ;;
+        Linux) open_linux_displays ;;
+        *) die "unsupported operating system: $(uname -s)" ;;
+      esac
+      show_next_steps "$action" "$device"
+      ;;
+    "")
+      usage
+      exit 2
+      ;;
+    *)
+      die "unknown command '$action' (try: aibi --help)"
+      ;;
+  esac
+}
+
+main "$@"
