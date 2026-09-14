@@ -12,6 +12,9 @@ bash ./aibi wireless ipad
 bash ./aibi wireless samsung
 bash ./aibi wireless other
 bash ./aibi wired ipad
+bash ./aibi mirror ipad
+bash ./aibi mirror iphone
+bash ./aibi mirror samsung
 bash ./aibi status
 ```
 
@@ -25,6 +28,18 @@ sudo chmod 755 /usr/local/bin/aibi
 hash -r
 aibi wireless ipad
 ```
+
+Pour afficher l'écran d'un appareil dans une fenêtre du Mac :
+
+```sh
+aibi mirror samsung   # nécessite scrcpy et une autorisation ADB préalable
+aibi mirror ipad      # ouvre QuickTime pour une connexion USB
+aibi mirror iphone    # ouvre QuickTime pour une connexion USB
+```
+
+Pour Samsung, installez scrcpy avec `brew install scrcpy`. Pour iPad et
+iPhone, macOS impose encore de choisir l'appareil dans QuickTime ; aucune
+commande native ne permet de contourner cette autorisation.
 
 Si `./aibi` renvoie `permission denied`, exécutez d'abord `chmod 755 ./aibi`
 et utilisez `bash ./aibi ...`. Vérifiez aussi que `aibi` est bien le fichier

@@ -8,6 +8,7 @@ usage() {
 Usage:
   aibi wireless [ipad|samsung|other]
   aibi wired    [ipad|samsung|other]
+  aibi mirror   [ipad|iphone|samsung]
   aibi status
   aibi --help
 
@@ -38,6 +39,29 @@ open_linux_displays() {
   else
     die "no supported display settings tool found (GNOME, XFCE, or ARandR)"
   fi
+}
+
+mirror_device() {
+  local device="$1"
+
+  case "$device" in
+    samsung)
+      command -v scrcpy >/dev/null 2>&1 ||
+        die "scrcpy is required for Samsung mirroring (install it with: brew install scrcpy)"
+      scrcpy
+      ;;
+    ipad|iphone)
+      if [[ "$(uname -s)" != "Darwin" ]]; then
+        die "iPad and iPhone mirroring is supported here only on macOS"
+      fi
+      open -a "QuickTime Player"
+      printf '%s\n' "QuickTime est ouvert. Choisissez Fichier > Nouvel enregistrement vidéo, puis l’appareil dans le menu caméra."
+      printf '%s\n' "macOS ne fournit pas de commande native pour sélectionner automatiquement un iPad ou un iPhone."
+      ;;
+    *)
+      die "device must be ipad, iphone, or samsung"
+      ;;
+  esac
 }
 
 show_next_steps() {
@@ -95,6 +119,11 @@ main() {
       else
         printf 'Display hardware: native inspection tool not found\n'
       fi
+      ;;
+    mirror)
+      [[ "$device" == "ipad" || "$device" == "iphone" || "$device" == "samsung" ]] ||
+        die "device must be ipad, iphone, or samsung"
+      mirror_device "$device"
       ;;
     wireless|wired)
       [[ "$device" == "ipad" || "$device" == "samsung" || "$device" == "other" ]] ||
