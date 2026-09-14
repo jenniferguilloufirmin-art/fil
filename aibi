@@ -6,8 +6,9 @@ VERSION="1.0.0"
 usage() {
   cat <<'EOF'
 Usage:
-  aibi wireless [apple|samsung|other]
-  aibi wired    [apple|samsung|other]
+  aibi wireless [ipad|samsung|other]
+  aibi wired    [ipad|samsung|other]
+  aibi mirror   [ipad|iphone|samsung]
   aibi status
   aibi --help
 
@@ -40,24 +41,54 @@ open_linux_displays() {
   fi
 }
 
+mirror_device() {
+  local device="$1"
+
+  case "$device" in
+    samsung)
+      command -v scrcpy >/dev/null 2>&1 ||
+        die "scrcpy is required for Samsung mirroring (install it with: brew install scrcpy)"
+      scrcpy
+      ;;
+    ipad|iphone)
+      if [[ "$(uname -s)" != "Darwin" ]]; then
+        die "iPad and iPhone mirroring is supported here only on macOS"
+      fi
+      osascript <<'APPLESCRIPT'
+tell application "QuickTime Player"
+  activate
+  new movie recording
+end tell
+APPLESCRIPT
+      printf '%s\n' "Fenêtre QuickTime ouverte. Sélectionnez l’iPad ou l’iPhone dans le menu caméra de cette fenêtre."
+      ;;
+    *)
+      die "device must be ipad, iphone, or samsung"
+      ;;
+  esac
+}
+
 show_next_steps() {
   local mode="$1"
   local device="$2"
 
   printf '\nMode: %s | Appareil: %s\n' "$mode" "$device"
   case "$device" in
-    apple)
+    ipad)
       if [[ "$mode" == "wireless" ]]; then
-        printf '%s\n' "Dans Réglages Écrans, choisissez Recopie d’écran/AirPlay puis l’Apple TV ou le Mac."
+        printf '%s\n' "Dans Réglages Écrans, cliquez sur Ajouter un écran (+), puis choisissez l’iPad sous Recopier ou étendre."
+        printf '%s\n' "L’iPad doit être compatible Sidecar, connecté au même compte Apple, avec le Wi-Fi, le Bluetooth et Handoff activés."
       else
-        printf '%s\n' "Branchez le câble compatible, puis sélectionnez l’écran dans Réglages Écrans."
+        printf '%s\n' "Branchez l’iPad en USB, ouvrez Réglages Écrans, puis choisissez l’iPad dans Ajouter un écran (+)."
       fi
       ;;
     samsung)
       if [[ "$mode" == "wireless" ]]; then
-        printf '%s\n' "Activez Smart View/Screen Mirroring sur le Samsung et sélectionnez cet ordinateur si disponible."
+        printf '%s\n' "macOS ne propose pas nativement une tablette Samsung comme second écran via Smart View."
+        printf '%s\n' "Utilisez une application compatible installée sur le Mac et la tablette, puis suivez son appairage."
       else
-        printf '%s\n' "Branchez le câble USB-C/HDMI compatible, puis sélectionnez l’écran dans les réglages."
+        printf '%s\n' "Une tablette Samsung ne devient pas automatiquement un écran Mac avec un câble USB-C/HDMI."
+        printf '%s\n' "Utilisez une application de second écran compatible ou un adaptateur prévu pour cet usage."
       fi
       ;;
     other)
@@ -93,9 +124,14 @@ main() {
         printf 'Display hardware: native inspection tool not found\n'
       fi
       ;;
+    mirror)
+      [[ "$device" == "ipad" || "$device" == "iphone" || "$device" == "samsung" ]] ||
+        die "device must be ipad, iphone, or samsung"
+      mirror_device "$device"
+      ;;
     wireless|wired)
-      [[ "$device" == "apple" || "$device" == "samsung" || "$device" == "other" ]] ||
-        die "device must be apple, samsung, or other"
+      [[ "$device" == "ipad" || "$device" == "samsung" || "$device" == "other" ]] ||
+        die "device must be ipad, samsung, or other"
       case "$(uname -s)" in
         Darwin) open_macos_displays ;;
         Linux) open_linux_displays ;;
